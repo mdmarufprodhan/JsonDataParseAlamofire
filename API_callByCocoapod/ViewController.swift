@@ -9,85 +9,54 @@
 import UIKit
 import Alamofire
 
+private struct Course :Decodable {
+    let id: Int?
+    let name: String?
+    let link: String?
+    let imageUrl: String?
+    let number_of_lessons: Int?
+}
+
+
 class ViewController: UIViewController {
 
     @IBOutlet weak var textview: UITextView!
+    let decoder = JSONDecoder()
+    var courseString : String = ""
+    var ID : String = ""
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
     }
     //Add Function 
     @IBAction func callButton(_ sender: Any) {
-        
-        Alamofire.request("https://api.darksky.net/forecast/352824027cc68ebcdf82edd59df645fd/37.8267,-122.4233")
-            .responseJSON { response in
-                
-           //     print(response.request as Any)  // original URL request
-             //   print(response.response as Any) // URL response
-               // print(response.result.value as Any)   // result of response serializatio
+      
+        Alamofire.request("https://api.letsbuildthatapp.com/jsondecodable/courses" ).validate().responseJSON { response in
+            //print(response.debugDescription)
             
-              //  self.textview.text = response.description
+            do{
                 
+                let course = try self.decoder.decode([Course].self, from: response.data! )
                 
-                //1. From "    currently" object show "summary" in view.
-                var temp : Double = 0.0
-                var time : Int = 1579168388
-                if let jsonDictionary = response.result.value as? [String : Any] {
-                    if let currentWeatherDictionary = jsonDictionary["currently"] as? [String : Any]{
-                        let summary = currentWeatherDictionary["summary"] as? String
-                        temp = currentWeatherDictionary["temperature"] as? Double ?? 0.0
-                        time = currentWeatherDictionary["time"] as! Int
-                        print(time)
-                        
-                //2. From     "currently" get time, convert the timestamp to Date and show in format "Jan 16, 2020 9:53 AM" in the view.
-                        
-                        let date = Date(timeIntervalSince1970: 1579168388)
-                        let dateFormatter = DateFormatter()
-                        dateFormatter.timeZone = TimeZone(abbreviation: "GMT+6") //Set timezone that you want
-                        dateFormatter.locale = NSLocale.current
-                        dateFormatter.dateFormat = "dd-MM-yyyy HH:mm a" //Specify your format that you want //"dd-MM-yyyy HH:mm"
-                        let strDate = dateFormatter.string(from: date as Date)
-                        
-                      //  print(strDate)
-                       // self.textview.text = strDate
-                        
-                        //From "minutely" object get "data" and show the average of "precipProbability" in the view. Ignore those value where precipProbability is given 0.
-                        
-                        
-                        
-                        let minutely = jsonDictionary["minutely"] as? [String : Any]
-                        let dataArray = minutely?["data"] as! NSArray
-                        var i = 0
-                        var count = 0
-                        var sum = 0 as Double
-                        for _ in dataArray {
-                            
-                            //print(item as Any)//print(dataArray[i])
-                            
-                            let item = dataArray[i] as! [String: Any]
-                            let precipProb = item["precipProbability"] as! Double
-                            if precipProb != 0 {
-                                sum = sum + precipProb
-                                count+=1
-                            }
-                            //print("i = \(i)")
-                            i+=1
-                        }
-                        let avg = sum / Double(count)
-                        print("Average = \(avg)")
-                        self.textview.text = String(avg)
-                        
-                    }
-                        
-                        
-                        
-                        
-                    }
+                for item in course {
+                    print(item.name!)
+                    //self.textview.text = item.name
+                    self.ID = String(item.id!)
+                    self.courseString += item.name! + ": " + self.ID + "\n"
+                    
                 }
+                self.textview.text = self.courseString
                 
+            }catch{
+                
+                print("error here")
+            }
         }
-         
     }
+}
+         
+
     
 
 
